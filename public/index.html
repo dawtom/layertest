@@ -32,6 +32,9 @@
 
     }
 
+    .esri-view-width-less-than-large .esri-popup__action-text {
+      display: block !important; 
+    }
   </style>
 
 
@@ -45,7 +48,8 @@
 
         "esri/layers/FeatureLayer",
 
-        "esri/core/urlUtils"
+        "esri/core/urlUtils",
+            "esri/widgets/Popup"
 
       ],
 
@@ -55,37 +59,51 @@
         urlUtils
       ) {
 
+          var map = new Map({
 
-        var map = new Map({
+              basemap: "topo"
 
-          basemap: "gray"
+          });
 
-        });
 
 
         var view = new MapView({
 
           container: "viewDiv",
 
-          map: map
-
-
           // extent: { // autocasts as new Extent()
           //
-          //   xmin: -9177811,
+          //   xmin: -10000,
           //
-          //   ymin: 4247000,
+          //   ymin: 10000,
           //
-          //   xmax: -9176791,
+          //   xmax: -10000,
           //
-          //   ymax: 4247784,
+          //   ymax: 10000,
           //
           //   spatialReference: 102100
           //
-          // }
+          // },
+            map: map,
+            center: [-118,34],
+            scale: 1000000,
+
+            // type: 'feature'
 
         });
 
+
+          view.on("pointer-down", function(event){
+              view.hitTest(event)
+                  .then(function(response){
+                      view.popup.open({
+                          title: "Działka",
+                          location: response.results[0].mapPoint,
+                          content: "ID działki: " + response.results[0].graphic.attributes.OBJECTID + "/nCena działki: " + response.results[0].graphic.attributes.LS1_Sale_Amount
+                      });
+
+                  });
+          });
 
         /********************
 
@@ -96,15 +114,31 @@
 
 
 
-        var featureLayer = new FeatureLayer({
+        var i;
+        var shift = 40000;
+          for (i = 0; i < 320000; i += shift) {
+              var featureLayer = new FeatureLayer({
+                  url: "http://arcgis.epicland.com:6080/arcgis/rest/services/Test2/Service3/MapServer",
+                  outFields: ["OBJECTID", "LS1_Sale_Amount", "CENTER_LAT", "CENTER_LON"]
+              });
+              // var j;
+              // var defExpr = "OBJECTID = " + i;
+              // for (j = i + 1; j < i + shift; j++) {
+              //     defExpr += " OR OBJECTID = " + j;
+              // }
+              var ibig = i + shift;
+              var defExpr = "OBJECTID > " + i + " AND OBJECTID < " + ibig + " AND CENTER_LAT > 33.806319 AND CENTER_LAT < 33.918435 AND CENTER_LON > -118.429350 AND CENTER_LON < -118.350764";
+              // console.log(defExpr);
+              featureLayer.definitionExpression = defExpr;
+              map.layers.add(featureLayer);
+          }
+         /* var featureLayer = new FeatureLayer({
+                url: "http://arcgis.epicland.com:6080/arcgis/rest/services/Test2/Service3/MapServer",
+                outFields: ["OBJECTID", "LS1_Sale_Amount", "CENTER_LAT", "CENTER_LON"]
+          });
 
-          url: "http://arcgis.epicland.com:6080/arcgis/rest/services/Test2/Service3/MapServer/0"
-
-        });
-
-
-        map.add(featureLayer);
-
+          featureLayer.definitionExpression = "OBJECTID < 80000 AND CENTER_LAT > 33.806319 AND CENTER_LAT < 33.918435 AND CENTER_LON > -118.429350 AND CENTER_LON < -118.350764";
+          map.layers.add(featureLayer)*/
 
       });
 
