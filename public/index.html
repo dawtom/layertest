@@ -38,7 +38,7 @@
     </style>
 
 
-    <script>
+        <script>
 
         require([
 
@@ -81,6 +81,19 @@
                     document.getElementById("rectangle").style.display = 'none';
                     document.getElementById("paral").style.display = 'block';
                 };
+
+                function httpGetAsync(theUrl, callback)
+                {
+                    var xmlHttp = new XMLHttpRequest();
+                    xmlHttp.onreadystatechange = function() {
+                        if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+                            callback(xmlHttp.responseText);
+                        }
+                    };
+                    xmlHttp.open("GET", theUrl, true); // true for asynchronous
+                    xmlHttp.setRequestHeader('Access-Control-Allow-Origin', '*');
+                    xmlHttp.send(null);
+                }
 
                 function toRadians (angle) {
                     return angle * (Math.PI / 180);
@@ -187,22 +200,31 @@
                     if (event.button == 0) {
                         view.hitTest(event)
                             .then(function (response) {
-                                console.log(response)
-                                if (response.results.length > 0) {
-                                    view.popup.open({
-                                        title: "Parcel",
-                                        location: response.results[0].mapPoint,
-                                        content: "<h1>ID: " + response.results[0].graphic.attributes.OBJECTID + "</h1>" +
-                                        "<h1>Price: " + response.results[0].graphic.attributes.LS1_Sale_Amount + "</h1>"
-                                    });
-                                } else {
-                                    view.popup.open({
-                                        title: "Parcel",
-                                        content: "There is no parcel here",
-                                        location: event.mapPoint
+                                var url = "http://localhost:5000/altitude?latitude=" + response.screenPoint.mapPoint.latitude + "&longitude=" + response.screenPoint.mapPoint.longitude;
+                                var altitude = -1;
+                                httpGetAsync(url, function (res) {
+                                    altitude = Math.round(JSON.parse(res).altitude);
 
-                                    });
-                                }
+
+                                    if (response.results.length > 0) {
+                                        view.popup.open({
+                                            title: "Parcel",
+                                            location: response.results[0].mapPoint,
+                                            content: "<h1>ID: " + response.results[0].graphic.attributes.OBJECTID + "</h1>" +
+                                            "<h1>Price: " + response.results[0].graphic.attributes.LS1_Sale_Amount + "</h1>" +
+                                            "<h1>Altitude: " + altitude + "</h1>"
+                                        });
+                                    } else {
+                                        view.popup.open({
+                                            title: "Parcel",
+                                            content: "There is no parcel here"+
+                                            "<h1>Altitude: " + altitude + "</h1>",
+                                            location: event.mapPoint
+
+                                        });
+                                    }
+                                });
+
                             });
                     }
 
