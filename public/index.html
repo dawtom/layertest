@@ -157,7 +157,7 @@
 
                     var featureLayer = new FeatureLayer({
                         url: "http://arcgis.epicland.com:6080/arcgis/rest/services/Test2/Service3/MapServer",
-                        outFields: ["OBJECTID", "LS1_Sale_Amount", "CENTER_LAT", "CENTER_LON"]
+                        outFields: ["OBJECTID", "LS1_Sale_Amount", "CENTER_LAT", "CENTER_LON", "Shape.STArea()"]
                     });
                     featureLayer.definitionExpression = defExpr;
                     map.layers.add(featureLayer);
@@ -207,11 +207,13 @@
 
 
                                     if (response.results.length > 0) {
+                                        console.log(response.results[0].graphic.attributes["Shape.StArea()"])
                                         view.popup.open({
                                             title: "Parcel",
                                             location: response.results[0].mapPoint,
                                             content: "<h1>ID: " + response.results[0].graphic.attributes.OBJECTID + "</h1>" +
                                             "<h1>Price: " + response.results[0].graphic.attributes.LS1_Sale_Amount + "</h1>" +
+                                            "<h1>Area: " +  response.results[0].graphic.attributes["Shape.STArea()"] + "</h1>" +
                                             "<h1>Altitude: " + altitude + "</h1>"
                                         });
                                     } else {
